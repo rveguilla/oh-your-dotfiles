@@ -93,8 +93,15 @@ function install_file() {
 }
 
 function run_installers() {
-  brew_install_upgrade_formulas
-  mas_install_upgrade_formulas
+  case "$OSTYPE" in
+    linux )
+      ## will add apt and dnf/yum hooks here 
+      ;;
+    darwin* )
+      brew_install_upgrade_formulas
+      mas_install_upgrade_formulas
+      ;;
+  esac
 
   info 'running installers'
   dotfiles_find install.sh | while read installer ; do run "running ${installer}" "${installer}" ; done
@@ -182,18 +189,29 @@ function dotfiles_install() {
   done
 
   # fonts
+  
+  case "$OSTYPE" in
+    linux-gnu )
+      fonts_dir="$HOME/.local/share/fonts" ;;
+    darwin* )
+      fonts_dir="$HOME/Library/Fonts" ;;
+  esac
   for file_source in $(dotfiles_find \*.otf); do
-    file_dest="$HOME/Library/Fonts/$(basename $file_source)"
+    file_dest="$fonts_dir/$(basename $file_source)"
     install_file copy $file_source $file_dest
   done
   for file_source in $(dotfiles_find \*.ttf); do
-    file_dest="$HOME/Library/Fonts/$(basename $file_source)"
+    file_dest="$fonts_dir/$(basename $file_source)"
     install_file copy $file_source $file_dest
   done
   for file_source in $(dotfiles_find \*.ttc); do
-    file_dest="$HOME/Library/Fonts/$(basename $file_source)"
+    file_dest="$fonts_dir/$(basename $file_source)"
     install_file copy $file_source $file_dest
   done
+
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+      fc-cache --force
+  fi
 
   # launch agents
   for file_source in $(dotfiles_find \*.launchagent); do

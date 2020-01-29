@@ -27,7 +27,14 @@ function dotfiles_reload() {
 }
 
 function dotfiles_find() {
-  find $(dotfiles) -name "$1"
+  case "$OSTYPE" in
+    linux-gnu )
+      exclude_path="*darwin*" ;;
+    darwin* )
+      exclude_path="*linux*" ;;
+  esac
+
+  find $(dotfiles) -name "$1" -not -path "$exclude_path"
 }
 
 function dotfiles() {

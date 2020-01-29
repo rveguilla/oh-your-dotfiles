@@ -48,8 +48,13 @@ DISABLE_AUTO_UPDATE="true"
 ZSH_THEME="agnoster"
 
 # configure plugins
+
+XARGS_OPTS=""
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    XARGS_OPTS="-r"
+fi
 plugins=("${(@f)$(
-find $(dotfiles) -maxdepth 1 -not -name '.git' -type d -exec basename {} \; | awk -v zsh=${ZSH} '{print zsh"/plugins/"$1}' | xargs ls -d 2>/dev/null | xargs -n 1 basename | sort | uniq
+find $(dotfiles) -maxdepth 1 -not -name '.git' -type d -exec basename {} \; | awk -v zsh=${ZSH} '{print zsh"/plugins/"$1}' | xargs ls -d 2>/dev/null | xargs $XARGS_OPTS -n 1 basename | sort | uniq
 
 find $(dotfiles) -maxdepth 2 -name oh-my-zsh.plugins -exec cat {} \; -exec echo \;
 )}")
@@ -102,3 +107,4 @@ if [[ "$PROFILE_STARTUP" == true ]]; then
     unsetopt xtrace
     exec 2>&3 3>&-
 fi
+
