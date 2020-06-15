@@ -85,3 +85,4 @@ function brew_taps() {
     done
 }
 
+brew_install_upgrade_formulas
