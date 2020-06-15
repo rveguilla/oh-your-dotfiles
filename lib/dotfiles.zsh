@@ -14,6 +14,13 @@ function realpath() {
 
 defaults=$(realpath "${0:a:h}/../defaults")
 
+case "$OSTYPE" in
+   linux-gnu )
+     os_excluded_path="*darwin*" ;;
+   darwin* )
+     os_excluded_path="*linux*" ;;
+esac
+
 function dotfiles_install() {
   $ZSHRC/lib/installers.zsh
 }
@@ -26,19 +33,21 @@ function dotfiles_reload() {
   source $HOME/.zshrc
 }
 
-function dotfiles_find() {
-  case "$OSTYPE" in
-    linux-gnu )
-      exclude_path="*darwin*" ;;
-    darwin* )
-      exclude_path="*linux*" ;;
-  esac
+function dotfiles_type_handlers() {
+  find $(dotfiles) -name 'dotfiles-type-handlers.d'
+}
 
-  find $(dotfiles) -name "$1" -not -path "$exclude_path"
+function dotfiles_type_handlers_find() {
+  find $(dotfiles_type_handlers) -name "$1" -not -path "$os_excluded_path"
+}
+
+function dotfiles_find() {
+  find $(dotfiles) -name "$1" -not -path "$os_excluded_path" -not -path '*dotfiles-type-handlers.d*'
 }
 
 function dotfiles() {
   files=("$defaults")
-  files+=($(find "$HOME" -maxdepth 1 -type d -name '.*dotfiles*'  -not -name '.oh-your-dotfiles'))
+  files+=($(find "$HOME" -maxdepth 1 -type d -name '.*dotfiles*'  -not -name '.oh-your-dotfiles' -not -name 'dotfiles-type-handlers.d'))
   echo "${files[@]}"
 }
+

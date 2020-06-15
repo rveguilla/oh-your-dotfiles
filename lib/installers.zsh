@@ -2,8 +2,6 @@
 libdir=${0:a:h}
 source $libdir/dotfiles.zsh
 source $libdir/terminal.zsh
-source $libdir/homebrew.zsh
-source $libdir/mas.zsh
 source $libdir/git.zsh
 
 function link_files() {
@@ -93,30 +91,19 @@ function install_file() {
 }
 
 function run_installers() {
-  case "$OSTYPE" in
-    linux )
-      ## will add apt and dnf/yum hooks here 
-      ;;
-    darwin* )
-      brew_install_upgrade_formulas
-      mas_install_upgrade_formulas
-      ;;
-  esac
+
+  typeset -U type_handlers
+  type_handlers=($(dotfiles_type_handlers_find \*.zsh))
+
+  # load the type handler files
+  for type_handler in ${type_handlers}
+  do
+    source $type_handler
+  done
 
   info 'running installers'
   dotfiles_find install.sh | while read installer ; do run "running ${installer}" "${installer}" ; done
 
-  info 'opening files'
-  for file_source in $(dotfiles_find install.open); do
-    OLD_IFS=$IFS
-    IFS=$'\n'
-    basedir="$(dirname $file_source)"
-    for file in `cat $file_source`; do
-      canonical_file="$basedir/$file"
-      open_file "$canonical_file"
-    done
-    IFS=$OLD_IFS
-  done
 }
 
 function run_postinstall() {
@@ -182,42 +169,6 @@ function dotfiles_install() {
     fi
   done
 
-  # preferences
-  for file_source in $(dotfiles_find \*.plist); do
-    file_dest="$HOME/Library/Preferences/`basename $file_source`"
-    install_file copy $file_source $file_dest
-  done
-
-  # fonts
-  
-  case "$OSTYPE" in
-    linux-gnu )
-      fonts_dir="$HOME/.local/share/fonts" ;;
-    darwin* )
-      fonts_dir="$HOME/Library/Fonts" ;;
-  esac
-  for file_source in $(dotfiles_find \*.otf); do
-    file_dest="$fonts_dir/$(basename $file_source)"
-    install_file copy $file_source $file_dest
-  done
-  for file_source in $(dotfiles_find \*.ttf); do
-    file_dest="$fonts_dir/$(basename $file_source)"
-    install_file copy $file_source $file_dest
-  done
-  for file_source in $(dotfiles_find \*.ttc); do
-    file_dest="$fonts_dir/$(basename $file_source)"
-    install_file copy $file_source $file_dest
-  done
-
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
-      fc-cache --force
-  fi
-
-  # launch agents
-  for file_source in $(dotfiles_find \*.launchagent); do
-    file_dest="$HOME/Library/LaunchAgents/$(basename $file_source | sed 's/.launchagent//')"
-    install_file copy $file_source $file_dest
-  done
 }
 
 function install() {

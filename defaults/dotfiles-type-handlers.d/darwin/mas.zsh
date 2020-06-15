@@ -72,3 +72,6 @@ function login_to_Mac_App_Store () {
   signed_in_user=$(mas account)
   echo -e "MAS user name: $signed_in_user"
 }
+
+
+mas_install_upgrade_formulas
