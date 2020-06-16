@@ -102,7 +102,7 @@ function run_installers() {
   done
 
   info 'running installers'
-  dotfiles_find install.sh | while read installer ; do run "running ${installer}" "${installer}" ; done
+#  dotfiles_find install.sh | while read installer ; do run "running ${installer}" "${installer}" ; done
 
 }
 
