@@ -47,6 +47,6 @@ git_patch() {
   dir=$(dirname $1)
   base=$(basename ${1%.*})
   for patch in $(find $dir -maxdepth 2 -name $base\*.gitpatch); do
-    run "applying $patch to $dest" "git -C "$dest" apply --quiet $patch"
+    run "applying $patch to $dest" "git -C "$dest" am --quiet $patch"
   done
 }
