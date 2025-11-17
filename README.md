@@ -99,6 +99,10 @@ Entries in `install.mas` should be in the format `<id> <name>` (the same format 
 - All topic directory names are implicitly added to the plugin list, so you get `osx` and `brew` automatically
 - Plugins listed in `oh-my-zsh.plugins` files are read and added to this list
 
+## Tracing ##
+
+Set `DOTFILES_XTRACE` to any value when executing install/update functions to trace executed commands.
+
 ## Profiling Startup Time ##
 
 If your shell is taking an excessive amount of time to start, run `zsh` with the `DOTFILES_PROFILE_ZSHRC` environment variable:

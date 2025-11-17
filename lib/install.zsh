@@ -1,4 +1,9 @@
 #!/usr/bin/env zsh
+
+if [ -n "$DOTFILES_XTRACE" ]; then
+  setopt xtrace
+fi
+
 libdir=${0:a:h}
 source $libdir/dotfiles.zsh
 source $libdir/terminal.zsh
