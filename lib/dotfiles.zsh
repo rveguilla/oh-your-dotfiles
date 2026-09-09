@@ -27,22 +27,14 @@ function dotfiles_reload() {
 }
 
 function dotfiles_find() {
+  local os=$(uname -s | tr '[:upper:]' '[:lower:]')
   local arch=$(uname -m)
-  local arch_native="$arch"
-  if [[ "Darwin" == "$(uname)" ]]; then
-    if sysctl -n machdep.cpu.brand_string | grep "Apple" > /dev/null; then
-      arch_native="arm64"
-    fi
-  fi
-  if [ "$arch_native" = "$arch" ]; then
-    find -L $(dotfiles) -type f $(dotfiles_find_ignore) -name "$1" -o -name "$1.${arch}" -o -name "$1.${arch}-native"
-  else
-    find -L $(dotfiles) -type f $(dotfiles_find_ignore) -name "$1" -o -name "$1.${arch}"
-  fi
+  find -L $(dotfiles) -type f $(dotfiles_find_ignore) \( -name "$1" -o -name "$1.${os}" -o -name "$1.${os}-${arch}" \)
 }
 
 function dotfiles_find_installer() {
   local arch=$(uname -m)
+  local os=$(uname -s | tr '[:upper:]' '[:lower:]')
   local arch_native="$arch"
   if [[ "Darwin" == "$(uname)" ]]; then
     if sysctl -n machdep.cpu.brand_string | grep "Apple" > /dev/null; then
@@ -51,14 +43,22 @@ function dotfiles_find_installer() {
   fi
   # only return universal installers for the native architecture to avoid double-executing the installers
   if [ "$arch_native" = "$arch" ]; then
-    find -L $(dotfiles) -type f $(dotfiles_find_ignore) -name "$1" -o -name "$1.${arch}" -o -name "$1.${arch}-native"
+    find -L $(dotfiles) -type f $(dotfiles_find_ignore) \( -name "$1" -o -name "$1.${os}" -o -name "$1.${arch}" -o -name "$1.${arch}-native" -o -name "$1.${os}-${arch}" -o -name "$1.${os}-${arch}-native" \)
   else
-    find -L $(dotfiles) -type f $(dotfiles_find_ignore) -name "$1.${arch}"
+    find -L $(dotfiles) -type f $(dotfiles_find_ignore) \( -name "$1.${arch}" -o -name "$1.${os}-${arch}" \)
   fi
 }
 
 function dotfiles_find_symlink() {
-  find -L $(dotfiles) $(dotfiles_find_ignore) -name "*.symlink"
+  local os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  local arch=$(uname -m)
+  find -L $(dotfiles) $(dotfiles_find_ignore) \( -name "*.symlink" -o -name "*.symlink.${os}" -o -name "*.symlink.${os}-${arch}" \) -prune
+}
+
+function dotfiles_symlink_dest() {
+  local name=$(basename "$1")
+  name="${name%.symlink*}"
+  echo "$HOME/.$name"
 }
 
 function dotfiles_find_ignore() {

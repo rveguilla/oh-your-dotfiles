@@ -23,7 +23,12 @@ function brew_prefix() {
       ;;
     esac
   else
-    echo "$HOME/.linuxbrew"
+    # Prefer standard path for bottle compatibility; keep existing $HOME installs working
+    if [[ -x "$HOME/.linuxbrew/bin/brew" ]]; then
+      echo "$HOME/.linuxbrew"
+    else
+      echo "/home/linuxbrew/.linuxbrew"
+    fi
   fi
 }
 
@@ -45,14 +50,14 @@ function brew_install_formulas() {
   fi
 
   if [ -n "$formulas" ]; then
-    brew_installed=$(brew_run ls --versions 2> /dev/null)
+    brew_installed=$(brew_run ls --formula --versions 2> /dev/null || true)
     for file in `dotfiles_find_installer install.${extension}`; do
       brew_install formula "$file"
     done
   fi
 
   if [ -n "$casks" ]; then
-    brew_installed=$(brew_run ls --cask --versions 2> /dev/null)
+    brew_installed=$(brew_run ls --cask --versions 2> /dev/null || true)
     for file in `dotfiles_find_installer install.${extension}-cask`; do
       brew_install cask "$file"
     done
@@ -113,12 +118,24 @@ function brew_check_and_install() {
 
 function brew_taps() {
   brew_tapped=$(brew_run tap 2> /dev/null)
+  local tap_trust_supported=false
+  local brew_trusted=""
+  if [[ -z "$HOMEBREW_NO_REQUIRE_TAP_TRUST" ]] && brew_run command trust > /dev/null 2>&1; then
+    tap_trust_supported=true
+    brew_trusted=$(brew_run tap-info --installed --json 2> /dev/null | awk -F'"' '
+      /"name":/ { name=$4 }
+      /"trusted": true/ { print name }
+    ')
+  fi
   for tapfile in `dotfiles_find_installer install.homebrew-tap`; do
     while read -r LINE || [[ -n "$LINE" ]]; do
       args=( ${=LINE} )
       tap="${args[1]}"
       if ! echo "$brew_tapped" | grep -q "$tap"; then
         run "tapping ${args[1]}" "brew_run tap ${args[1]} ${args[2]}"
+      fi
+      if [[ "$tap_trust_supported" == true ]] && ! echo "$brew_trusted" | grep -Fqx "$tap"; then
+        run "trusting ${tap}" "brew_run trust --tap ${tap}"
       fi
     done < $tapfile
   done
